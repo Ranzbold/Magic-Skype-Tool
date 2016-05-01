@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using SKYPE4COMLib;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Magic_Skype_Tool
 {
@@ -21,6 +22,9 @@ namespace Magic_Skype_Tool
         AutoCompleteStringCollection searchindex = new AutoCompleteStringCollection();
         Stopwatch stopwatch = new Stopwatch();
         
+        
+
+
 
 
         public Form1()
@@ -40,8 +44,7 @@ namespace Magic_Skype_Tool
             skype = new Skype();
             EnableTab(tabPage1, true);
             ((_ISkypeEvents_Event)skype).AttachmentStatus += OnAttach;
-
-
+            skype.MessageStatus += OnMessage;
         }
         private void OnAttach(TAttachmentStatus status)
         {
@@ -65,6 +68,15 @@ namespace Magic_Skype_Tool
    
 
         }
+        private void OnMessage(ChatMessage msg, TChatMessageStatus status)
+        {
+            if (status == TChatMessageStatus.cmsReceived)
+            {
+
+                skype.SendMessage(msg.Sender.Handle, "TEST");
+            }
+
+        }
 
         private void loadContacts()
         {
@@ -78,13 +90,13 @@ namespace Magic_Skype_Tool
         {
             try
             {
-                skype.Attach(8);
+                skype.Attach(7,false);
                 loadContacts();
                 indexContacts();
             }
-            catch
+            catch(COMException)
             {
-                MessageBox.Show("Attach Request could not be sent. Try to restart Skype!");
+                MessageBox.Show("Attach Request could not be sent. Try to restart Skype and the Application!");
             }
     
 
