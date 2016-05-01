@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SKYPE4COMLib;
+using System.Diagnostics;
 
 namespace Magic_Skype_Tool
 {
@@ -15,7 +16,10 @@ namespace Magic_Skype_Tool
     {
         Skype skype;
         List<String> contacts = new List<string>();
+        int amount;
+        String message;
         AutoCompleteStringCollection searchindex = new AutoCompleteStringCollection();
+        Stopwatch stopwatch = new Stopwatch();
 
         public Form1()
         {
@@ -28,6 +32,8 @@ namespace Magic_Skype_Tool
             skype = new Skype();
             timer1.Enabled = true;
             timer1.Start();
+            backgroundWorker1.WorkerSupportsCancellation = true;
+            backgroundWorker1.WorkerReportsProgress = true;
 
         }
         private void loadContacts()
@@ -117,6 +123,83 @@ namespace Magic_Skype_Tool
             {
                 skype.SendMessage(user.Handle, richTextBox1.Text);
             }
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            String s = Microsoft.VisualBasic.Interaction.InputBox("Define the amount of messages to send", "Amount of messages");
+            if (int.TryParse(s, out amount))
+            {
+                if (amount > 0)
+                {
+                    stopwatch.Start();
+                    message = richTextBox1.Text;
+                    backgroundWorker1.RunWorkerAsync();
+                }
+                else
+                {
+                    MessageBox.Show("The Input has to be greater than 0");
+                }
+
+            }
+            else
+            {
+                MessageBox.Show("The Input has to be an even number");
+            }
+        }
+
+        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+        {
+            sendMessages();
+  
+        }
+
+        private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            progressBar2.Value = e.ProgressPercentage;
+            label5.Text = "Messages sent: " + e.ProgressPercentage + "%";
+        }
+
+        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if(e.Cancelled)
+            {
+                MessageBox.Show("Successfully cleared message-queue");
+            }
+            else
+            {
+                stopwatch.Stop();
+                TimeSpan ts = stopwatch.Elapsed;
+                string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                MessageBox.Show("Messages were successfully sent" + Environment.NewLine+ "Elapsed Time: " + elapsedTime);
+                stopwatch.Reset();
+                amount = 0;
+                
+            }
+    
+        }
+        private void sendMessages()
+        {
+            for (int a = 0; a <= amount; a++)
+            {
+                int i = 0;
+                while (i < checkedListBox1.CheckedItems.Count)
+                {
+                    skype.SendMessage(checkedListBox1.CheckedItems[i].ToString(), message);
+                    i++;
+                }
+                int progress = (int)a / amount * 100;
+                backgroundWorker1.ReportProgress(progress);
+                if (backgroundWorker1.CancellationPending)
+                {
+                    backgroundWorker1.ReportProgress(100);
+                }
+            }
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            backgroundWorker1.CancelAsync();
         }
     }
 }
