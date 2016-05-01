@@ -20,22 +20,52 @@ namespace Magic_Skype_Tool
         String message;
         AutoCompleteStringCollection searchindex = new AutoCompleteStringCollection();
         Stopwatch stopwatch = new Stopwatch();
+        
+
 
         public Form1()
         {
             InitializeComponent();
         }
-
+        public static void EnableTab(TabPage page, bool enable)
+        {
+            foreach (Control ctl in page.Controls) ctl.Enabled = enable;
+        }
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            foreach (TabPage page in tabControl1.TabPages)
+            {
+                EnableTab(page, false);
+            }
             skype = new Skype();
-            timer1.Enabled = true;
-            timer1.Start();
-            backgroundWorker1.WorkerSupportsCancellation = true;
-            backgroundWorker1.WorkerReportsProgress = true;
+            EnableTab(tabPage1, true);
+            ((_ISkypeEvents_Event)skype).AttachmentStatus += OnAttach;
+
 
         }
+        private void OnAttach(TAttachmentStatus status)
+        {
+
+            if (status.Equals(TAttachmentStatus.apiAttachSuccess))
+            {
+                MessageBox.Show("Successfully Hooked into Skype");
+                timer1.Enabled = true;
+                timer1.Start();
+                backgroundWorker1.WorkerSupportsCancellation = true;
+                backgroundWorker1.WorkerReportsProgress = true;
+                foreach (TabPage page in tabControl1.TabPages)
+                {
+                    EnableTab(page, true);
+                }
+            }
+            if(status.Equals(TAttachmentStatus.apiAttachRefused))
+            {
+                MessageBox.Show("Could not hook into Skype");
+            }
+   
+
+        }
+
         private void loadContacts()
         {
             foreach (User user in skype.Friends)
@@ -46,9 +76,17 @@ namespace Magic_Skype_Tool
 
         private void button1_Click(object sender, EventArgs e)
         {
-            skype.Attach();
-            loadContacts();
-            indexContacts();
+            try
+            {
+                skype.Attach(8);
+                loadContacts();
+                indexContacts();
+            }
+            catch
+            {
+                MessageBox.Show("Attach Request could not be sent. Try to restart Skype!");
+            }
+    
 
 
 
@@ -70,6 +108,9 @@ namespace Magic_Skype_Tool
             textBox1.AutoCompleteCustomSource = searchindex;
             textBox1.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
             textBox1.AutoCompleteSource = AutoCompleteSource.CustomSource;
+            textBox2.AutoCompleteCustomSource = searchindex;
+            textBox2.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            textBox2.AutoCompleteSource = AutoCompleteSource.CustomSource;
             foreach (var user in contacts)
             {
                 checkedListBox1.Items.Add(user);
@@ -151,7 +192,7 @@ namespace Magic_Skype_Tool
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
             sendMessages();
-  
+
         }
 
         private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -162,7 +203,7 @@ namespace Magic_Skype_Tool
 
         private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if(e.Cancelled)
+            if (e.Cancelled)
             {
                 MessageBox.Show("Successfully cleared message-queue");
             }
@@ -171,12 +212,12 @@ namespace Magic_Skype_Tool
                 stopwatch.Stop();
                 TimeSpan ts = stopwatch.Elapsed;
                 string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                MessageBox.Show("Messages were successfully sent" + Environment.NewLine+ "Elapsed Time: " + elapsedTime);
+                MessageBox.Show("Messages were successfully sent" + Environment.NewLine + "Elapsed Time: " + elapsedTime);
                 stopwatch.Reset();
                 amount = 0;
-                
+
             }
-    
+
         }
         private void sendMessages()
         {
@@ -188,7 +229,7 @@ namespace Magic_Skype_Tool
                     skype.SendMessage(checkedListBox1.CheckedItems[i].ToString(), message);
                     i++;
                 }
-                
+
                 int progress = a * 100 / amount;
                 backgroundWorker1.ReportProgress(progress);
                 if (backgroundWorker1.CancellationPending)
@@ -201,6 +242,12 @@ namespace Magic_Skype_Tool
         private void button9_Click(object sender, EventArgs e)
         {
             backgroundWorker1.CancelAsync();
+        }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            PictureBox1.Image = new System.Drawing.Bitmap(new System.IO.MemoryStream(new System.Net.WebClient().DownloadData("http://api.skype.com/users/" + textBox2.Text + "/profile/avatar")));
+            textBox3.Text = skype.ToString();
         }
     }
 }
