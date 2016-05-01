@@ -26,6 +26,7 @@ namespace Magic_Skype_Tool
         {
 
             skype = new Skype();
+            timer1.Enabled = true;
             timer1.Start();
 
         }
@@ -81,6 +82,40 @@ namespace Magic_Skype_Tool
                 }
 
 
+            }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            int i = 0;
+            while (i < checkedListBox1.CheckedItems.Count)
+            {
+                skype.SendMessage(checkedListBox1.CheckedItems[i].ToString(), richTextBox1.Text);
+                i++;
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            timer2.Start();
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            timer2.Stop();
+        }
+
+        private void trackBar1_ValueChanged(object sender, EventArgs e)
+        {
+            label3.Text = "Speed: " + trackBar1.Value + "ms";
+            timer2.Interval = trackBar1.Value;
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            foreach (User user in skype.Friends)
+            {
+                skype.SendMessage(user.Handle, richTextBox1.Text);
             }
         }
     }
