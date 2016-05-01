@@ -188,7 +188,8 @@ namespace Magic_Skype_Tool
                     skype.SendMessage(checkedListBox1.CheckedItems[i].ToString(), message);
                     i++;
                 }
-                int progress = (int)a / amount * 100;
+                
+                int progress = a * 100 / amount;
                 backgroundWorker1.ReportProgress(progress);
                 if (backgroundWorker1.CancellationPending)
                 {
