@@ -21,8 +21,9 @@ namespace Magic_Skype_Tool
         String message;
         AutoCompleteStringCollection searchindex = new AutoCompleteStringCollection();
         Stopwatch stopwatch = new Stopwatch();
-        
-        
+        String version = "0.1";
+
+
 
 
 
@@ -45,6 +46,8 @@ namespace Magic_Skype_Tool
             EnableTab(tabPage1, true);
             ((_ISkypeEvents_Event)skype).AttachmentStatus += OnAttach;
             skype.MessageStatus += OnMessage;
+            textBox17.Text = DateTime.Now.ToString();
+            timer3.Start();
         }
         private void OnAttach(TAttachmentStatus status)
         {
@@ -52,8 +55,6 @@ namespace Magic_Skype_Tool
             if (status.Equals(TAttachmentStatus.apiAttachSuccess))
             {
                 MessageBox.Show("Successfully Hooked into Skype");
-                timer1.Enabled = true;
-                timer1.Start();
                 backgroundWorker1.WorkerSupportsCancellation = true;
                 backgroundWorker1.WorkerReportsProgress = true;
                 foreach (TabPage page in tabControl1.TabPages)
@@ -61,11 +62,11 @@ namespace Magic_Skype_Tool
                     EnableTab(page, true);
                 }
             }
-            if(status.Equals(TAttachmentStatus.apiAttachRefused))
+            if (status.Equals(TAttachmentStatus.apiAttachRefused))
             {
                 MessageBox.Show("Could not hook into Skype");
             }
-   
+
 
         }
         private void OnMessage(ChatMessage msg, TChatMessageStatus status)
@@ -90,15 +91,15 @@ namespace Magic_Skype_Tool
         {
             try
             {
-                skype.Attach(7,false);
+                skype.Attach(7, false);
                 loadContacts();
                 indexContacts();
             }
-            catch(COMException)
+            catch (COMException)
             {
                 MessageBox.Show("Attach Request could not be sent. Try to restart Skype and the Application!");
             }
-    
+
 
 
 
@@ -108,8 +109,6 @@ namespace Magic_Skype_Tool
         {
 
             int usage = PerfUtils.getCpuUsage();
-            progressBar1.Value = usage;
-            label1.Text = "CPU usage:" + usage.ToString() + "%";
         }
         private void indexContacts()
         {
@@ -180,24 +179,32 @@ namespace Magic_Skype_Tool
 
         private void button7_Click(object sender, EventArgs e)
         {
-            String s = Microsoft.VisualBasic.Interaction.InputBox("Define the amount of messages to send", "Amount of messages");
-            if (int.TryParse(s, out amount))
+            if (!(richTextBox1.Text == ""))
             {
-                if (amount > 0)
+                String s = Microsoft.VisualBasic.Interaction.InputBox("Define the amount of messages to send", "Amount of messages");
+
+                if (int.TryParse(s, out amount))
                 {
-                    stopwatch.Start();
-                    message = richTextBox1.Text;
-                    backgroundWorker1.RunWorkerAsync();
+                    if (amount > 0)
+                    {
+                        stopwatch.Start();
+                        message = richTextBox1.Text;
+                        backgroundWorker1.RunWorkerAsync();
+                    }
+                    else
+                    {
+                        MessageBox.Show("The Input has to be greater than 0");
+                    }
+
                 }
                 else
                 {
-                    MessageBox.Show("The Input has to be greater than 0");
+                    MessageBox.Show("The Input has to be an even number");
                 }
-
             }
             else
             {
-                MessageBox.Show("The Input has to be an even number");
+                MessageBox.Show("The text to send must not be empty");
             }
         }
 
@@ -224,7 +231,8 @@ namespace Magic_Skype_Tool
                 stopwatch.Stop();
                 TimeSpan ts = stopwatch.Elapsed;
                 string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                MessageBox.Show("Messages were successfully sent" + Environment.NewLine + "Elapsed Time: " + elapsedTime);
+                int total = amount * checkedListBox1.CheckedItems.Count;
+                MessageBox.Show("Messages were successfully sent" + Environment.NewLine + "Total amount of messages sent: " + total + Environment.NewLine + "Elapsed Time: " + elapsedTime + Environment.NewLine + " Average Messages per Second: " + Math.Round((total / ts.TotalMilliseconds) * 1000));
                 stopwatch.Reset();
                 amount = 0;
 
@@ -261,5 +269,59 @@ namespace Magic_Skype_Tool
             PictureBox1.Image = new System.Drawing.Bitmap(new System.IO.MemoryStream(new System.Net.WebClient().DownloadData("http://api.skype.com/users/" + textBox2.Text + "/profile/avatar")));
             textBox3.Text = skype.ToString();
         }
+
+        private void button12_Click(object sender, EventArgs e)
+        {
+            DataObject data = QuoteUtils.getObject(textBox18.Text, richTextBox2.Text, textBox17.Text);
+            Clipboard.SetDataObject(data, true);
+            
+        }
+
+        private void timer3_Tick(object sender, EventArgs e)
+        {
+            textBox17.Text = DateTime.Now.ToString();
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            switch (checkBox1.Checked)
+            {
+                case true:
+                    timer3.Enabled = true;
+                    break;
+                case false:
+                    timer3.Enabled = false;
+                    break;
+            }
+        }
+
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+            switch (radioButton1.Checked)
+            {
+                case true:
+                    textBox17.Enabled = false;
+                    break;
+                case false:
+                    textBox17.Enabled = true;
+                    break;
+            }
+
+        }
+
+        private void radioButton2_CheckedChanged(object sender, EventArgs e)
+        {
+            switch (radioButton2.Checked)
+            {
+                case true:
+                    textBox17.Enabled = true;
+                    break;
+                case false:
+                    textBox17.Enabled = false;
+                    break;
+            }
+
+        }
     }
 }
+
