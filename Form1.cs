@@ -267,14 +267,44 @@ namespace Magic_Skype_Tool
         private void button10_Click(object sender, EventArgs e)
         {
             PictureBox1.Image = new System.Drawing.Bitmap(new System.IO.MemoryStream(new System.Net.WebClient().DownloadData("http://api.skype.com/users/" + textBox2.Text + "/profile/avatar")));
-            textBox3.Text = skype.ToString();
+            User cuser = skype.User[textBox2.Text];
+            textBox3.Text = cuser.FullName;
+            textBox4.Text = cuser.RichMoodText;
+            textBox5.Text = cuser.Country;
+            textBox6.Text = cuser.City;
+            textBox7.Text = cuser.Birthday.ToString();
+            textBox8.Text = cuser.LastOnline.ToString();
+            if (cuser.HasCallEquipment)
+            {
+                textBox9.Text = "Yes";
+            }
+            else
+            {
+                textBox9.Text = "No";
+            }
+            if(cuser.IsVideoCapable)
+            {
+                textBox10.Text = "Yes";
+            }
+            else
+            {
+                textBox10.Text = "No";
+            }
+            textBox11.Text = cuser.About;
+            textBox12.Text = cuser.Aliases;
+            textBox13.Text = cuser.CountryCode;
+            textBox14.Text = cuser.Language;
+            textBox15.Text = cuser.Timezone.ToString();
+            textBox16.Text = cuser.Sex.ToString();
+            String path = "C:/Users/cedga/Desktop";
+
         }
 
         private void button12_Click(object sender, EventArgs e)
         {
             DataObject data = QuoteUtils.getObject(textBox18.Text, richTextBox2.Text, textBox17.Text);
             Clipboard.SetDataObject(data, true);
-            
+
         }
 
         private void timer3_Tick(object sender, EventArgs e)
