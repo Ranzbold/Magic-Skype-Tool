@@ -21,8 +21,6 @@ namespace Magic_Skype_Tool
         String message;
         AutoCompleteStringCollection searchindex = new AutoCompleteStringCollection();
         Stopwatch stopwatch = new Stopwatch();
-        String version = "0.1";
-
 
 
 
@@ -45,7 +43,7 @@ namespace Magic_Skype_Tool
             skype = new Skype();
             EnableTab(tabPage1, true);
             ((_ISkypeEvents_Event)skype).AttachmentStatus += OnAttach;
-            skype.MessageStatus += OnMessage;
+            // skype.MessageStatus += OnMessage;
             textBox17.Text = DateTime.Now.ToString();
             timer3.Start();
         }
@@ -69,15 +67,15 @@ namespace Magic_Skype_Tool
 
 
         }
-        private void OnMessage(ChatMessage msg, TChatMessageStatus status)
-        {
-            if (status == TChatMessageStatus.cmsReceived)
-            {
+        /*   private void OnMessage(ChatMessage msg, TChatMessageStatus status)
+           {
+               if (status == TChatMessageStatus.cmsReceived)
+               {
 
-                skype.SendMessage(msg.Sender.Handle, "TEST");
-            }
+                   skype.SendMessage(msg.Sender.Handle, "TEST");
+               }
 
-        }
+           }*/
 
         private void loadContacts()
         {
@@ -171,9 +169,16 @@ namespace Magic_Skype_Tool
 
         private void button8_Click(object sender, EventArgs e)
         {
-            foreach (User user in skype.Friends)
+            if (richTextBox1.Text.Equals(""))
             {
-                skype.SendMessage(user.Handle, richTextBox1.Text);
+                foreach (User user in skype.Friends)
+                {
+                    skype.SendMessage(user.Handle, richTextBox1.Text);
+                }
+            }
+            else
+            {
+                MessageBox.Show("You cant send an empty Message!");
             }
         }
 
@@ -210,7 +215,13 @@ namespace Magic_Skype_Tool
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
-            sendMessages();
+            List<string> s = new List<string>();
+            foreach (var item in checkedListBox1.CheckedItems)
+            {
+                s.Add(item.ToString());
+            }
+                sendMessages(s, message,amount);
+            
 
         }
 
@@ -239,7 +250,7 @@ namespace Magic_Skype_Tool
             }
 
         }
-        private void sendMessages()
+    /*    private void sendMessages()
         {
             for (int a = 0; a <= amount; a++)
             {
@@ -255,8 +266,30 @@ namespace Magic_Skype_Tool
                 if (backgroundWorker1.CancellationPending)
                 {
                     backgroundWorker1.ReportProgress(100);
+                    return;
                 }
             }
+        }
+        */
+        private void sendMessages(List<string> kontakte,string message,int anzahl)
+        {
+            for(int a = 0; a <= anzahl; a++)
+            {
+                foreach(string s in kontakte)
+                {
+                  skype.SendMessage(s, message);
+
+                }
+                int progress = a * 100 / anzahl;
+                backgroundWorker1.ReportProgress(progress);
+                if (backgroundWorker1.CancellationPending)
+                {
+                    backgroundWorker1.ReportProgress(100);
+                }
+  
+          
+            }
+
         }
 
         private void button9_Click(object sender, EventArgs e)
@@ -266,38 +299,51 @@ namespace Magic_Skype_Tool
 
         private void button10_Click(object sender, EventArgs e)
         {
-            PictureBox1.Image = new System.Drawing.Bitmap(new System.IO.MemoryStream(new System.Net.WebClient().DownloadData("http://api.skype.com/users/" + textBox2.Text + "/profile/avatar")));
-            User cuser = skype.User[textBox2.Text];
-            textBox3.Text = cuser.FullName;
-            textBox4.Text = cuser.RichMoodText;
-            textBox5.Text = cuser.Country;
-            textBox6.Text = cuser.City;
-            textBox7.Text = cuser.Birthday.ToString();
-            textBox8.Text = cuser.LastOnline.ToString();
-            if (cuser.HasCallEquipment)
+            if (!(textBox2.Text == ""))
             {
-                textBox9.Text = "Yes";
-            }
-            else
-            {
-                textBox9.Text = "No";
-            }
-            if(cuser.IsVideoCapable)
-            {
-                textBox10.Text = "Yes";
-            }
-            else
-            {
-                textBox10.Text = "No";
-            }
-            textBox11.Text = cuser.About;
-            textBox12.Text = cuser.Aliases;
-            textBox13.Text = cuser.CountryCode;
-            textBox14.Text = cuser.Language;
-            textBox15.Text = cuser.Timezone.ToString();
-            textBox16.Text = cuser.Sex.ToString();
-            String path = "C:/Users/cedga/Desktop";
+                try
+                {
+                    PictureBox1.Image = new System.Drawing.Bitmap(new System.IO.MemoryStream(new System.Net.WebClient().DownloadData("http://api.skype.com/users/" + textBox2.Text + "/profile/avatar")));
 
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Could not retrieve Image Info Error Message:" + ex.Message);
+                }
+                User cuser = skype.User[textBox2.Text];
+                textBox3.Text = cuser.FullName;
+                textBox4.Text = cuser.RichMoodText;
+                textBox5.Text = cuser.Country;
+                textBox6.Text = cuser.City;
+                textBox7.Text = cuser.Birthday.ToString();
+                textBox8.Text = cuser.LastOnline.ToString();
+                if (cuser.HasCallEquipment)
+                {
+                    textBox9.Text = "Yes";
+                }
+                else
+                {
+                    textBox9.Text = "No";
+                }
+                if (cuser.IsVideoCapable)
+                {
+                    textBox10.Text = "Yes";
+                }
+                else
+                {
+                    textBox10.Text = "No";
+                }
+                textBox11.Text = cuser.About;
+                textBox12.Text = cuser.Aliases;
+                textBox13.Text = cuser.CountryCode;
+                textBox14.Text = cuser.Language;
+                textBox15.Text = cuser.Timezone.ToString();
+                textBox16.Text = cuser.Sex.ToString();
+            }
+            else
+            {
+                MessageBox.Show("Username cannot be empty");
+            }
         }
 
         private void button12_Click(object sender, EventArgs e)
@@ -351,6 +397,22 @@ namespace Magic_Skype_Tool
                     break;
             }
 
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < checkedListBox1.Items.Count ; i++)
+            {
+                checkedListBox1.SetItemChecked(i, true);
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < checkedListBox1.Items.Count ; i++)
+            {
+                checkedListBox1.SetItemChecked(i, false);
+            }
         }
     }
 }
