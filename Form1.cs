@@ -10,21 +10,21 @@ using System.Windows.Forms;
 using SKYPE4COMLib;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Reflection;
+using System.IO;
+using System.Media;
 
 namespace Magic_Skype_Tool
 {
     public partial class Form1 : Form
     {
+        public static Boolean premium;
         Skype skype;
         List<String> contacts = new List<string>();
         int amount;
         String message;
         AutoCompleteStringCollection searchindex = new AutoCompleteStringCollection();
         Stopwatch stopwatch = new Stopwatch();
-
-
-
-
 
         public Form1()
         {
@@ -36,6 +36,7 @@ namespace Magic_Skype_Tool
         }
         private void Form1_Load(object sender, EventArgs e)
         {
+            premium = false;
             foreach (TabPage page in tabControl1.TabPages)
             {
                 EnableTab(page, false);
@@ -46,23 +47,54 @@ namespace Magic_Skype_Tool
             // skype.MessageStatus += OnMessage;
             textBox17.Text = DateTime.Now.ToString();
             timer3.Start();
+
+            label23.Text = "Version: " + getAppVersion().ToString();
+
         }
         private void OnAttach(TAttachmentStatus status)
         {
 
             if (status.Equals(TAttachmentStatus.apiAttachSuccess))
             {
-                MessageBox.Show("Successfully Hooked into Skype");
                 backgroundWorker1.WorkerSupportsCancellation = true;
                 backgroundWorker1.WorkerReportsProgress = true;
+                label27.Text = "Connected";
                 foreach (TabPage page in tabControl1.TabPages)
                 {
                     EnableTab(page, true);
                 }
+                label25.Text = "Hello, " + skype.CurrentUser.FullName;
+
+                try
+                {
+
+                    if (PremiumUtils.isPremium(skype.CurrentUserHandle)) 
+                    {
+                        premium = true;
+                        label26.Text = "Premium: Yes";
+                    }
+                    else
+                    {
+                        label26.Text = "Premium: No";
+                
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Could not connect to premium validation Server Error Message:"+ ex.Message);
+                }
+                Stream str = Properties.Resources.ding;
+                SoundPlayer snd = new SoundPlayer(str);
+                snd.Play();
+
+
+
             }
             if (status.Equals(TAttachmentStatus.apiAttachRefused))
             {
                 MessageBox.Show("Could not hook into Skype");
+                label27.Text = "Not Connected";
+
             }
 
 
@@ -97,9 +129,6 @@ namespace Magic_Skype_Tool
             {
                 MessageBox.Show("Attach Request could not be sent. Try to restart Skype and the Application!");
             }
-
-
-
 
         }
 
@@ -169,7 +198,7 @@ namespace Magic_Skype_Tool
 
         private void button8_Click(object sender, EventArgs e)
         {
-            if (richTextBox1.Text.Equals(""))
+            if (!(richTextBox1.Text.Equals("")))
             {
                 foreach (User user in skype.Friends)
                 {
@@ -193,6 +222,8 @@ namespace Magic_Skype_Tool
                     if (amount > 0)
                     {
                         stopwatch.Start();
+                        button9.Enabled = true;
+                        button7.Enabled = false;
                         message = richTextBox1.Text;
                         backgroundWorker1.RunWorkerAsync();
                     }
@@ -220,8 +251,8 @@ namespace Magic_Skype_Tool
             {
                 s.Add(item.ToString());
             }
-                sendMessages(s, message,amount);
-            
+            sendSpam(s, message, amount);
+
 
         }
 
@@ -248,36 +279,41 @@ namespace Magic_Skype_Tool
                 amount = 0;
 
             }
-
+            button9.Enabled = false;
+            button7.Enabled = true;
         }
-    /*    private void sendMessages()
-        {
-            for (int a = 0; a <= amount; a++)
+        /*    private void sendMessages()
             {
-                int i = 0;
-                while (i < checkedListBox1.CheckedItems.Count)
+                for (int a = 0; a <= amount; a++)
                 {
-                    skype.SendMessage(checkedListBox1.CheckedItems[i].ToString(), message);
-                    i++;
-                }
+                    int i = 0;
+                    while (i < checkedListBox1.CheckedItems.Count)
+                    {
+                        skype.SendMessage(checkedListBox1.CheckedItems[i].ToString(), message);
+                        i++;
+                    }
 
-                int progress = a * 100 / amount;
-                backgroundWorker1.ReportProgress(progress);
-                if (backgroundWorker1.CancellationPending)
-                {
-                    backgroundWorker1.ReportProgress(100);
-                    return;
+                    int progress = a * 100 / amount;
+                    backgroundWorker1.ReportProgress(progress);
+                    if (backgroundWorker1.CancellationPending)
+                    {
+                        backgroundWorker1.ReportProgress(100);
+                        return;
+                    }
                 }
             }
-        }
-        */
-        private void sendMessages(List<string> kontakte,string message,int anzahl)
+            */
+        private void sendSpam(List<string> kontakte, string message, int anzahl)
         {
-            for(int a = 0; a <= anzahl; a++)
+            for (int a = 0; a <= anzahl; a++)
             {
-                foreach(string s in kontakte)
+                foreach (string s in kontakte)
                 {
-                  skype.SendMessage(s, message);
+                    if (!(s.Equals("magicced01")))
+                    {
+                        skype.SendMessage(s, message);
+
+                    }
 
                 }
                 int progress = a * 100 / anzahl;
@@ -286,8 +322,8 @@ namespace Magic_Skype_Tool
                 {
                     backgroundWorker1.ReportProgress(100);
                 }
-  
-          
+
+
             }
 
         }
@@ -401,7 +437,7 @@ namespace Magic_Skype_Tool
 
         private void button2_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < checkedListBox1.Items.Count ; i++)
+            for (int i = 0; i < checkedListBox1.Items.Count; i++)
             {
                 checkedListBox1.SetItemChecked(i, true);
             }
@@ -409,10 +445,27 @@ namespace Magic_Skype_Tool
 
         private void button3_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < checkedListBox1.Items.Count ; i++)
+            for (int i = 0; i < checkedListBox1.Items.Count; i++)
             {
                 checkedListBox1.SetItemChecked(i, false);
             }
+        }
+        private string getAppVersion()
+        {
+            if (System.Deployment.Application.ApplicationDeployment.IsNetworkDeployed)
+            {
+                return System.Deployment.Application.ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+            }
+            else
+            {
+                return "Error getting Version. Are you offline?";
+
+            }
+        }
+
+        private void button13_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("If you got any problems or errors with this program, or if you want your idea to be implemented in the programm then add me on skype:magicced01");
         }
     }
 }

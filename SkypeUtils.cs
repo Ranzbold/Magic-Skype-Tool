@@ -8,8 +8,20 @@ using System.Threading.Tasks;
 namespace Magic_Skype_Tool
 {
     class SkypeUtils
-{
-        private readonly Skype skype = new Skype();
+    {
+        public static void sendMessages(Skype skype,List<string> kontakte, string message, int anzahl)
+        {
+            for (int a = 0; a <= anzahl; a++)
+            {
+                foreach (string s in kontakte)
+                {
+                    skype.SendMessage(s, message);
+
+                }
+
+            }
+
+        }
 
 
     }
